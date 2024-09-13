@@ -1,64 +1,87 @@
 import pandas as pd
-from utils import  download_image, download_images
 import os
 from pathlib import Path
+import argparse
+from utils import download_image, download_images
 
-
-DOWNLOAD_FOLDER = "images/train/"
-DATASET_PATH = "dataset/train.csv"
-
-def downloadImageDataset():
-    # ITERATION_DOWNLOAD_RATE = 1000
-    # start = 168500
-    ITERATION_DOWNLOAD_RATE = 100
-    start = 0
-
-    df = pd.read_csv(DATASET_PATH)
-    dataSize = df.shape[0]
-
-    Path(DOWNLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
-    while(start < dataSize):
-        print("start: ", start, "end: ", start + ITERATION_DOWNLOAD_RATE)
-        links = df['image_link'].iloc[start:start + ITERATION_DOWNLOAD_RATE]
-        download_images(links.values, DOWNLOAD_FOLDER)
-        
-        start = start + ITERATION_DOWNLOAD_RATE
-        print(f"successfully downloaded {ITERATION_DOWNLOAD_RATE} images\n")
-
-def validateImages(end = None,download=True):
-    if not Path(DOWNLOAD_FOLDER).exists():
-        print("Error: directory doesn't exists")
-        return
+def downloadImageDataset(dataset_path, download_folder, iteration_download_rate=100, start=0, end=None):
+    df = pd.read_csv(dataset_path)
     
-    df = pd.read_csv(DATASET_PATH)
-    if end == None:
+    # If data_size is not provided, download all available images
+    if end is None or end > df.shape[0]:
         end = df.shape[0]
 
-    links = df['image_link'].iloc[0:end+1].values
-    allExists = True
+    Path(download_folder).mkdir(parents=True, exist_ok=True)
+    while start < end:
+        print("start: ", start, "end: ", min(start + iteration_download_rate, end))
+        links = df['image_link'].iloc[start:min(start + iteration_download_rate, end)]
+        download_images(links.values, download_folder)
+
+        start = start + iteration_download_rate
+        print(f"Successfully downloaded {min(iteration_download_rate, end - start)} images\n")
+
+
+def validateImages(dataset_path, download_folder,start=0, end=None, download_missing=True):
+    if not Path(download_folder).exists():
+        print("Error: directory doesn't exist")
+        return
+
+    df = pd.read_csv(dataset_path)
+    if end is None or end > df.shape[0]:
+        end = df.shape[0]
+
+    links = df['image_link'].iloc[start:end].values
+    all_exists = True
     for link in links:
         fname = Path(link).name
-        path = os.path.join(DOWNLOAD_FOLDER,fname)
+        path = os.path.join(download_folder, fname)
         if not os.path.exists(path):
-            print("Missing image: ",link)
+            print("Missing image: ", link)
             t = False
             try:
-                if download:
-                    download_image(link,DOWNLOAD_FOLDER)
-                    print("image downloaded")
+                if download_missing:
+                    download_image(link, download_folder)
+                    print("Image downloaded")
                     t = True
             except:
-                print("Error on downloading image")
-            
-            allExists = t and allExists
-    if allExists:
-        print("All images exists")
-    else: 
-        print("Mentioned images are missing please download them.")        
+                print("Error downloading image")
+
+            all_exists = t and all_exists
+    if all_exists:
+        print("All images exist")
+    else:
+        print("Some images are missing, please download them.")
 
 
 if __name__ == "__main__":
-    # downloadImageDataset()
+    # Set up argument parser
+    parser = argparse.ArgumentParser(description="Download and validate images.")
+    
+    # Add arguments with aliases
+    parser.add_argument("-m", "--mode", choices=["download", "validate"], required=True,
+                        help="Mode to run the script in: 'download' or 'validate'.")
+    parser.add_argument("-dp", "--dataset_path", default="dataset/train.csv", 
+                        help="Path to the CSV file containing image links.")
+    parser.add_argument("-df", "--download_folder", default="images/train/", 
+                        help="Folder to save the downloaded images.")
+    parser.add_argument("-s", "--start", type=int, default=0, 
+                        help="Start index for downloading/validating images.")
+    parser.add_argument("-e", "--end", type=int, default=None, 
+                        help="End index for downloading/validating images.")
+    
+    # Parameters for downloading images
+    parser.add_argument("-idr", "--iteration_download_rate", type=int, default=1000, 
+                        help="Number of images to download per iteration.")
+    
+    # Parameters for validating images
+    parser.add_argument("-im", "--ignore_missing", action="store_true", 
+                        help="Won't download missing images during validation.")
 
-    limit = 100_000
-    validateImages(end=limit)
+    # Parse the arguments
+    args = parser.parse_args()
+
+    # Run the corresponding function based on the mode
+    if args.mode == "download":
+        downloadImageDataset(args.dataset_path, args.download_folder, args.iteration_download_rate, args.start, args.end)
+    elif args.mode == "validate":
+        validateImages(args.dataset_path, args.download_folder, start=args.start, end=args.end, download_missing=not args.ignore_missing)
