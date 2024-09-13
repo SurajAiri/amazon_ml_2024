@@ -31,26 +31,30 @@ def validateImages(dataset_path, download_folder,start=0, end=None, download_mis
         end = df.shape[0]
 
     links = df['image_link'].iloc[start:end].values
-    all_exists = True
+    missingCount = 0
     for link in links:
         fname = Path(link).name
         path = os.path.join(download_folder, fname)
         if not os.path.exists(path):
+            # print(list(links).index(link))
             print("Missing image: ", link)
-            t = False
+            missing = True
             try:
                 if download_missing:
                     download_image(link, download_folder)
                     print("Image downloaded")
-                    t = True
+                    missing = False
             except:
                 print("Error downloading image")
 
-            all_exists = t and all_exists
-    if all_exists:
+            if missing:
+                missingCount += 1
+            
+    if missingCount < 1:
         print("All images exist")
     else:
         print("Some images are missing, please download them.")
+        print("Missing images count: ",missingCount)
 
 
 if __name__ == "__main__":
