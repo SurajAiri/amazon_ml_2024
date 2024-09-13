@@ -15,11 +15,10 @@ if __name__ == "__main__":
     dataSize = df.shape[0]
 
     pathlib.Path(DOWNLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
-    # while(start < df.shape[0]):
-    # while(start < dataSize):
-    #     print("start: ", start, "end: ", start + ITERATION_DOWNLOAD_RATE)
-    #     links = df['image_link'].iloc[start:start + ITERATION_DOWNLOAD_RATE]
-    #     # download_images(links.values, DOWNLOAD_FOLDER)
+    while(start < dataSize):
+        print("start: ", start, "end: ", start + ITERATION_DOWNLOAD_RATE)
+        links = df['image_link'].iloc[start:start + ITERATION_DOWNLOAD_RATE]
+        download_images(links.values, DOWNLOAD_FOLDER)
         
-    #     start = start + ITERATION_DOWNLOAD_RATE
-    #     print(f"successfully downloaded {ITERATION_DOWNLOAD_RATE} images\n")
+        start = start + ITERATION_DOWNLOAD_RATE
+        print(f"successfully downloaded {ITERATION_DOWNLOAD_RATE} images\n")
