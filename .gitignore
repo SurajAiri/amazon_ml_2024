@@ -16,8 +16,9 @@ __pycache__/
 *.gif
 *.svg
 images/
-dataset/
+# dataset/
 *.csv
+!train.csv
 *.xlsx
 *.xls
 *.json

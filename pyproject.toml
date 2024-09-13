@@ -11,6 +11,10 @@ pandas = "^2.2.2"
 jupyter = "^1.1.1"
 tqdm = "^4.66.5"
 pillow = "^10.4.0"
+opencv-python = "^4.10.0.84"
+easyocr = "^1.7.1"
+matplotlib = "^3.9.2"
+pytesseract = "^0.3.13"
 
 
 [build-system]
