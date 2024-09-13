@@ -22,7 +22,6 @@ dataset/
 *.xls
 *.json
 *.xml
-*.txt
 
 # Distribution / packaging
 .Python
